@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 public class Main {
 
     private static final String HOST = "ftp.4700.network";
@@ -36,12 +38,19 @@ public class Main {
                                       ARG2. If ARG1 is a local file, then ARG2 must be a URL, and vice-versa.""";
 
     public static void main(String[] args) {
+        String operation = "";
+        String param1 = "";
+        String param2 = "";
+        FTPClient client;
         try {
             ParseArgs result = ParseArgs.parse(args);
             if (result.helpRequested) {
                 System.out.println(HELP_STR);
                 System.exit(0);
             } else {
+                operation = result.operation;
+                param1 = result.param1;
+                param2 = result.param2;
                 // Use the result to execute the FTP operation
                 System.out.println("Operation: " + result.operation);
                 System.out.println("Param1: " + result.param1);
@@ -55,7 +64,29 @@ public class Main {
             System.exit(1);
         }
 
-        FTPClient client = new FTPClient(HOST, CONTROL_PORT, USER, PASSWORD);
+        client = new FTPClient(HOST, CONTROL_PORT, USER, PASSWORD);
         client.connect();
+
+        // Process the command that was passed
+
+        try {
+            executeCommand(client, operation, param1, param2);
+            client.disconnect();
+        } catch (IOException e) {
+            client.closeQuietly();
+        }
+    }
+
+    public static void executeCommand(FTPClient client, String operation, String param1, String param2) throws IOException {
+        switch (operation) {
+            case "mkdir":
+                // RUN MKD
+                client.createDirectory(param1);
+                break;
+            case "rmdir":
+                // RUN RMD
+                client.deleteDirectory(param1);
+                break;
+        }
     }
 }
