@@ -112,6 +112,20 @@ public class FTPClient {
         return response;
     }
 
+    public void createDirectory(String directory) throws IOException {
+        String response = sendCommand("MKD " + directory);
+        if (!response.startsWith("257 ")) {
+            throw new IOException("Failed to create directory. Response: " + response);
+        }
+    }
+
+    public void deleteDirectory(String directory) throws IOException {
+        String response = sendCommand("RMD " + directory);
+        if (!response.startsWith("250 ")) {
+            throw new IOException("Failed to remove directory. Response: " + response);
+        }
+    }
+
     public void disconnect() throws IOException {
         sendCommand("QUIT");
         closeQuietly();
@@ -121,7 +135,7 @@ public class FTPClient {
      * Closes the control socket and associated streams quietly,
      * without throwing exceptions.
      */
-    private void closeQuietly() {
+    public void closeQuietly() {
         if (controlReader != null) {
             try {
                 controlReader.close();
