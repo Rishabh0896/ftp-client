@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 
 /**
  * A simple FTP Client that interacts with the FTP Server used for CS4700/CS5700
@@ -124,6 +125,38 @@ public class FTPClient {
         if (!response.startsWith("250 ")) {
             throw new IOException("Failed to remove directory. Response: " + response);
         }
+    }
+
+    private int openDataChannel() throws IOException {
+        String response = sendCommand("PASV");
+        System.out.println(response);
+        if (!response.startsWith("227 ")) {
+            throw new IOException("Failed to enter passive mode. Response: " + response);
+        }
+
+        // Find the port that we have to use for the data channel
+        String[] address = response.replaceAll("\\D+", " ").split("\\s+");
+        Arrays.stream(address).forEach(System.out::println);
+
+        // Open a new Socket connection for the data channel
+        return Integer.parseInt(address[address.length - 2]) * 256 + Integer.parseInt(address[address.length - 1]);
+    }
+
+    public void listFiles(String path) throws IOException {
+        int dataPort = openDataChannel();
+
+        try (Socket dataSocket = new Socket(server, dataPort);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()))) {
+            String response = sendCommand("LIST " + path);
+            System.out.println(response);
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        readResponse(); // Read the closing response
     }
 
     public void disconnect() throws IOException {
