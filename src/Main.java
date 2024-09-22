@@ -87,6 +87,9 @@ public class Main {
                 // RUN RMD
                 client.deleteDirectory(param1);
                 break;
+            case "ls":
+                client.listFiles(param1);
+                // RUN LIST
         }
     }
 }
