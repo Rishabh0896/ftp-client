@@ -1,7 +1,15 @@
 public class Main {
 
+    private static final String HOST = "ftp.4700.network";
+
+    private static final int CONTROL_PORT = 21;
+
+    private static final String USER = "gupta.risha";
+
+    private static final String PASSWORD = "f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef";
+
     public static final String HELP_STR = """
-            usage: 4700ftp [-h] [--verbose] operation params [params ...]
+            usage: ./4700ftp [-h] [--verbose] operation params [params ...]
             
             FTP client for listing, copying, moving, and deleting files and directories on remote FTP servers.
             
@@ -32,6 +40,7 @@ public class Main {
             ParseArgs result = ParseArgs.parse(args);
             if (result.helpRequested) {
                 System.out.println(HELP_STR);
+                System.exit(0);
             } else {
                 // Use the result to execute the FTP operation
                 System.out.println("Operation: " + result.operation);
@@ -39,11 +48,14 @@ public class Main {
                 System.out.println("Param2: " + result.param2);
                 System.out.println("Verbose: " + result.verbose);
             }
+
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
             System.out.println(HELP_STR);
             System.exit(1);
         }
-    }
 
+        FTPClient client = new FTPClient(HOST, CONTROL_PORT, USER, PASSWORD);
+        client.connect();
+    }
 }
