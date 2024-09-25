@@ -1,8 +1,10 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+package client;
+
+import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 /**
@@ -19,7 +21,7 @@ public class FTPClient {
     private final String password;
 
     /**
-     * Constructs an FTPClient with the specified server details and credentials.
+     * Constructs an client.FTPClient with the specified server details and credentials.
      *
      * @param server   The hostname or IP address of the FTP server
      * @param port     The port number on which the FTP server is listening
@@ -36,40 +38,30 @@ public class FTPClient {
     /**
      * Establishes a connection to the FTP Server and setups up the connection
      */
-    public void connect() {
-        try {
-            controlSocket = new Socket(server, controlPort);
-            controlReader = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
-            controlWriter = new PrintWriter(controlSocket.getOutputStream(), true);
-            System.out.println("Connection Successful!");
+    public void connect() throws IOException {
+        controlSocket = new Socket(server, controlPort);
+        controlReader = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
+        controlWriter = new PrintWriter(controlSocket.getOutputStream(), true);
+        System.out.println("Connection Successful!");
 
-            String response = readResponse();
-            if (!response.startsWith("220 ")) {
-                throw new IOException("FTP server not ready. Response: " + response);
-            }
-
-            /* Logs in the server with the credentials provided */
-            login();
-
-            /* Set up the connection, the server expects this to happen before any files are viewed/transferred */
-
-            /* Set the connection to 8bit binary data mode */
-            sendCommand("TYPE I");
-
-            /* Set the connection to stream mode */
-            sendCommand("MODE S");
-
-            /* Set the connection to file oriented mode */
-            sendCommand("STRU F");
-
-        } catch (IOException e) {
-            System.out.println("IO EXCEPTION: " + e);
-            e.printStackTrace();
-            closeQuietly();
-        } catch (Exception e) {
-            e.printStackTrace();
-            closeQuietly();
+        String response = readResponse();
+        if (!response.startsWith("220 ")) {
+            throw new IOException("FTP server not ready. Response: " + response);
         }
+
+        /* Logs in the server with the credentials provided */
+        login();
+
+        /* Set up the connection, the server expects this to happen before any files are viewed/transferred */
+
+        /* Set the connection to 8bit binary data mode */
+        sendCommand("TYPE I");
+
+        /* Set the connection to stream mode */
+        sendCommand("MODE S");
+
+        /* Set the connection to file oriented mode */
+        sendCommand("STRU F");
 
     }
 
@@ -96,7 +88,6 @@ public class FTPClient {
      */
     String sendCommand(String command) throws IOException {
         controlWriter.println(command);
-        controlWriter.flush();
         return readResponse();
     }
 
@@ -127,7 +118,7 @@ public class FTPClient {
         }
     }
 
-    private int openDataChannel() throws IOException {
+    private int getDataPort() throws IOException {
         String response = sendCommand("PASV");
         System.out.println(response);
         if (!response.startsWith("227 ")) {
@@ -143,7 +134,7 @@ public class FTPClient {
     }
 
     public void listFiles(String path) throws IOException {
-        int dataPort = openDataChannel();
+        int dataPort = getDataPort();
 
         try (Socket dataSocket = new Socket(server, dataPort);
              BufferedReader reader = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()))) {
@@ -153,15 +144,87 @@ public class FTPClient {
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
             }
-        } catch (Exception e) {
+            // Read the closing response
+            readResponse();
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        readResponse(); // Read the closing response
+
     }
 
-    public void disconnect() throws IOException {
-        sendCommand("QUIT");
-        closeQuietly();
+    public void copyFile(String remotePath, String localPath, boolean isDownload) throws IOException {
+        String operation = isDownload ? "Downloading" : "Uploading";
+        System.out.println(operation + " remotePath: " + remotePath);
+        System.out.println(operation + " localPath: " + localPath);
+
+        int dataPort = getDataPort();
+        String command = isDownload ? "RETR " : "STOR ";
+
+        // Ensure local directory exists for download
+        if (isDownload) {
+            Files.createDirectories(Paths.get(localPath).getParent());
+        }
+
+        try (Socket dataSocket = new Socket(server, dataPort);
+             InputStream input = isDownload ? dataSocket.getInputStream() : new FileInputStream(localPath);
+             OutputStream output = isDownload ? new FileOutputStream(localPath) : dataSocket.getOutputStream()) {
+
+            // Send the appropriate FTP command
+            String response = sendCommand(command + remotePath);
+            System.out.println("FTP response: " + response);
+
+            if (!response.startsWith("150") && !response.startsWith("125")) {
+                throw new IOException("Failed to initiate file transfer: " + response);
+            }
+
+            // Perform the file transfer
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = input.read(buffer)) != -1) {
+                output.write(buffer, 0, bytesRead);
+            }
+
+            output.flush();
+        } catch (IOException e) {
+            System.err.println("Error during file content transfer: " + e.getMessage());
+            throw e;
+        } finally {
+            String transferResponse = readResponse();
+            System.out.println("Transfer completed: " + transferResponse);
+        }
+    }
+
+    public void moveFile(String remotePath, String localPath, boolean isDownload) throws IOException {
+        copyFile(remotePath, localPath, isDownload);
+        if (isDownload) {
+            deleteFile(remotePath, true);
+        } else {
+            deleteFile(localPath, false);
+        }
+    }
+
+    public void deleteFile(String filePath, boolean is_remote) throws IOException {
+        System.out.println("Deleting file: " + filePath + " remote: " + is_remote);
+        if (is_remote) {
+            String response = sendCommand("DELE " + filePath);
+            System.out.println(response);
+        } else {
+            Path path = Paths.get(filePath);
+            if (Files.exists(path)) {
+                Files.delete(path);
+                System.out.println("Local file deleted successfully: " + filePath);
+            } else {
+                throw new IOException("Local file not found: " + filePath);
+            }
+        }
+    }
+
+    public void disconnect() {
+        try {
+            sendCommand("QUIT");
+        } catch (IOException e) {
+            closeQuietly();
+        }
     }
 
     /**
