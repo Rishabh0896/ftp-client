@@ -1,14 +1,14 @@
-import java.io.IOException;
+import command.FTPExecutor;
+import util.FTPPathHandler;
+
+import java.net.MalformedURLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class Main {
 
-    private static final String HOST = "ftp.4700.network";
-
-    private static final int CONTROL_PORT = 21;
-
-    private static final String USER = "gupta.risha";
-
-    private static final String PASSWORD = "f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef";
+    private static final Map<String, BiConsumer<FTPExecutor, FTPPathHandler.ParsedPath>> OPERATIONS = new HashMap<>();
 
     public static final String HELP_STR = """
             usage: ./4700ftp [-h] [--verbose] operation params [params ...]
@@ -37,59 +37,39 @@ public class Main {
             mv <ARG1> <ARG2>         Move the file given by ARG1 to the file given by
                                       ARG2. If ARG1 is a local file, then ARG2 must be a URL, and vice-versa.""";
 
+    static {
+        OPERATIONS.put("ls", (executor, path) -> executor.executeCommand(client -> client.listFiles(path.getRemotePath())));
+        OPERATIONS.put("mkdir", (executor, path) -> executor.executeCommand(client -> client.createDirectory(path.getRemotePath())));
+        OPERATIONS.put("rmdir", (executor, path) -> executor.executeCommand(client -> client.deleteDirectory(path.getRemotePath())));
+        OPERATIONS.put("rm", (executor, path) -> executor.executeCommand(client -> client.deleteFile(path.getRemotePath(), true)));
+        OPERATIONS.put("cp", (executor, path) -> executor.executeCommand(client -> client.copyFile(path.getRemotePath(), path.getLocalPath(), path.isDownload())));
+        OPERATIONS.put("mv", (executor, path) -> executor.executeCommand(client -> client.moveFile(path.getRemotePath(), path.getLocalPath(), path.isDownload())));
+    }
+
     public static void main(String[] args) {
-        String operation = "";
-        String param1 = "";
-        String param2 = "";
-        FTPClient client;
         try {
             ParseArgs result = ParseArgs.parse(args);
             if (result.helpRequested) {
                 System.out.println(HELP_STR);
-                System.exit(0);
-            } else {
-                operation = result.operation;
-                param1 = result.param1;
-                param2 = result.param2;
-                // Use the result to execute the FTP operation
-                System.out.println("Operation: " + result.operation);
-                System.out.println("Param1: " + result.param1);
-                System.out.println("Param2: " + result.param2);
-                System.out.println("Verbose: " + result.verbose);
+                return;
+            }
+            FTPPathHandler.ParsedPath parsedPath = (result.param1.startsWith("ftp://") ?
+                    FTPPathHandler.parse(result.param1, result.param2, true) :
+                    FTPPathHandler.parse(result.param2, result.param1, false));
+            FTPExecutor executor = new FTPExecutor(parsedPath.getHost(), parsedPath.getPort(),
+                    parsedPath.getUsername(), parsedPath.getPassword());
+
+            BiConsumer<FTPExecutor, FTPPathHandler.ParsedPath> operation = OPERATIONS.get(result.operation);
+            if (operation == null) {
+                throw new IllegalArgumentException("Unknown operation: " + result.operation);
             }
 
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            operation.accept(executor, parsedPath);
+
+        } catch (IllegalArgumentException | MalformedURLException e) {
+            System.err.println("Error: " + e.getMessage());
             System.out.println(HELP_STR);
             System.exit(1);
-        }
-
-        client = new FTPClient(HOST, CONTROL_PORT, USER, PASSWORD);
-        client.connect();
-
-        // Process the command that was passed
-
-        try {
-            executeCommand(client, operation, param1, param2);
-            client.disconnect();
-        } catch (IOException e) {
-            client.closeQuietly();
-        }
-    }
-
-    public static void executeCommand(FTPClient client, String operation, String param1, String param2) throws IOException {
-        switch (operation) {
-            case "mkdir":
-                // RUN MKD
-                client.createDirectory(param1);
-                break;
-            case "rmdir":
-                // RUN RMD
-                client.deleteDirectory(param1);
-                break;
-            case "ls":
-                client.listFiles(param1);
-                // RUN LIST
         }
     }
 }
