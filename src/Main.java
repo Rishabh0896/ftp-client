@@ -8,14 +8,6 @@ import java.util.function.BiConsumer;
 
 public class Main {
 
-    private static final String HOST = "ftp.4700.network";
-
-    private static final int CONTROL_PORT = 21;
-
-    private static final String USER = "anonymous";
-
-    private static final String PASSWORD = "";
-
     private static final Map<String, BiConsumer<FTPExecutor, FTPPathHandler.ParsedPath>> OPERATIONS = new HashMap<>();
 
     public static final String HELP_STR = """
