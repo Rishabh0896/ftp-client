@@ -11,7 +11,7 @@ fi
 
 # Path to the jar file
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-JAR_FILE="$SCRIPT_DIR/build/libs/Project_2.jar"
+JAR_FILE="$SCRIPT_DIR/build/libs/4700ftp.jar"
 
 # Check if the jar file exists
 if [ ! -f "$JAR_FILE" ]; then
