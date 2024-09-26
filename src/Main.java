@@ -21,32 +21,33 @@ public class Main {
     /**
      * Help string containing usage information and available operations.
      */
-    public static final String HELP_STR = """
-            usage: ./4700ftp [-h] [--verbose] operation params [params ...]
-            
-            FTP client for listing, copying, moving, and deleting files and directories on remote FTP servers.
-            
-            positional arguments:
-            operation      The operation to execute. Valid operations are 'ls', 'rm', 'rmdir',
-                          'mkdir', 'cp', and 'mv'
-            params         Parameters for the given operation. Will be one or two paths and/or URLs.
-            
-            optional arguments:
-            -h, --help     show this help message and exit
-            --verbose, -v  Print all messages to and from the FTP server
-            
-            # Available Operations
-            
-            This FTP client supports the following operations:
-            
-            ls <URL>                 Print out the directory listing from the FTP server at the given URL
-            mkdir <URL>              Create a new directory on the FTP server at the given URL
-            rm <URL>                 Delete the file on the FTP server at the given URL
-            rmdir <URL>              Delete the directory on the FTP server at the given URL
-            cp <ARG1> <ARG2>         Copy the file given by ARG1 to the file given by
-                                      ARG2. If ARG1 is a local file, then ARG2 must be a URL, and vice-versa.
-            mv <ARG1> <ARG2>         Move the file given by ARG1 to the file given by
-                                      ARG2. If ARG1 is a local file, then ARG2 must be a URL, and vice-versa.""";
+    public static final String HELP_STR =
+            "usage: ./4700ftp [-h] [--verbose] operation params [params ...]\n" +
+                    "\n" +
+                    "FTP client for listing, copying, moving, and deleting files and directories on remote FTP servers.\n" +
+                    "\n" +
+                    "positional arguments:\n" +
+                    "operation      The operation to execute. Valid operations are 'ls', 'rm', 'rmdir',\n" +
+                    "              'mkdir', 'cp', and 'mv'\n" +
+                    "params         Parameters for the given operation. Will be one or two paths and/or URLs.\n" +
+                    "\n" +
+                    "optional arguments:\n" +
+                    "-h, --help     show this help message and exit\n" +
+                    "--verbose, -v  Print all messages to and from the FTP server\n" +
+                    "\n" +
+                    "# Available Operations\n" +
+                    "\n" +
+                    "This FTP client supports the following operations:\n" +
+                    "\n" +
+                    "ls <URL>                 Print out the directory listing from the FTP server at the given URL\n" +
+                    "mkdir <URL>              Create a new directory on the FTP server at the given URL\n" +
+                    "rm <URL>                 Delete the file on the FTP server at the given URL\n" +
+                    "rmdir <URL>              Delete the directory on the FTP server at the given URL\n" +
+                    "cp <ARG1> <ARG2>         Copy the file given by ARG1 to the file given by\n" +
+                    "                          ARG2. If ARG1 is a local file, then ARG2 must be a URL, and vice-versa.\n" +
+                    "mv <ARG1> <ARG2>         Move the file given by ARG1 to the file given by\n" +
+                    "                          ARG2. If ARG1 is a local file, then ARG2 must be a URL, and vice-versa.";
+
 
     static {
         OPERATIONS.put("ls", (executor, path) -> executor.executeCommand(client -> client.listFiles(path.getRemotePath())));
