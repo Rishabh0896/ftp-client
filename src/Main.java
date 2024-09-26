@@ -6,10 +6,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+/**
+ * Main class for the FTP client application.
+ * This class handles command-line argument parsing, operation execution,
+ * and serves as the entry point for the FTP client.
+ */
 public class Main {
 
+    /**
+     * Map of supported FTP operations and their corresponding execution logic.
+     */
     private static final Map<String, BiConsumer<FTPExecutor, FTPPathHandler.ParsedPath>> OPERATIONS = new HashMap<>();
 
+    /**
+     * Help string containing usage information and available operations.
+     */
     public static final String HELP_STR = """
             usage: ./4700ftp [-h] [--verbose] operation params [params ...]
             
@@ -46,27 +57,43 @@ public class Main {
         OPERATIONS.put("mv", (executor, path) -> executor.executeCommand(client -> client.moveFile(path.getRemotePath(), path.getLocalPath(), path.isDownload())));
     }
 
+    /**
+     * Main method serving as the entry point for the FTP client application.
+     * Parses command-line arguments, sets up the FTP connection, and executes the requested operation.
+     *
+     * @param args Command-line arguments passed to the application
+     */
     public static void main(String[] args) {
         try {
+            // Parse command-line arguments
             ParseArgs result = ParseArgs.parse(args);
+
+            // Display help message if requested
             if (result.helpRequested) {
                 System.out.println(HELP_STR);
                 return;
             }
+
+            // Parse the FTP path
             FTPPathHandler.ParsedPath parsedPath = (result.param1.startsWith("ftp://") ?
                     FTPPathHandler.parse(result.param1, result.param2, true) :
                     FTPPathHandler.parse(result.param2, result.param1, false));
+
+            // Create an FTP executor with the parsed connection details
             FTPExecutor executor = new FTPExecutor(parsedPath.getHost(), parsedPath.getPort(),
                     parsedPath.getUsername(), parsedPath.getPassword());
 
+            // Retrieve the operation to execute
             BiConsumer<FTPExecutor, FTPPathHandler.ParsedPath> operation = OPERATIONS.get(result.operation);
             if (operation == null) {
                 throw new IllegalArgumentException("Unknown operation: " + result.operation);
             }
 
+            // Execute the requested operation
             operation.accept(executor, parsedPath);
 
         } catch (IllegalArgumentException | MalformedURLException e) {
+            // Handle errors by displaying the error message and help information
             System.err.println("Error: " + e.getMessage());
             System.out.println(HELP_STR);
             System.exit(1);

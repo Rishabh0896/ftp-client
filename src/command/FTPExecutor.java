@@ -4,29 +4,60 @@ import client.FTPClient;
 
 import java.io.IOException;
 
+/**
+ * The FTPExecutor class is responsible for executing FTP commands using an FTPClient.
+ * It manages the connection lifecycle and provides methods to execute commands with and without log capture.
+ */
 public class FTPExecutor {
-    private final String server;
-    private final int port;
-    private final String username;
-    private final String password;
+    private final FTPClient client;
 
+    /**
+     * Constructs an FTPExecutor with the specified server details and credentials.
+     *
+     * @param server   The hostname or IP address of the FTP server
+     * @param port     The port number on which the FTP server is listening
+     * @param username The username for authentication
+     * @param password The password for authentication
+     */
     public FTPExecutor(String server, int port, String username, String password) {
-        this.server = server;
-        this.port = port;
-        this.username = username;
-        this.password = password;
+        this.client = new FTPClient(server, port, username, password);
     }
 
+    /**
+     * Executes an FTP command by connecting to the server, running the command, and then disconnecting.
+     * Any IOException that occurs during the process is caught and printed to the error stream.
+     *
+     * @param command The FTPCommand to execute
+     */
     public void executeCommand(FTPCommand command) {
-        FTPClient client = new FTPClient(server, port, username, password);
         try {
             client.connect();
             command.execute(client);
         } catch (IOException e) {
-            // TODO: Figure out what to do here
             e.printStackTrace();
         } finally {
             client.disconnect();
         }
+    }
+
+    /**
+     * Executes an FTP command and captures the logs of the operation.
+     * This method connects to the server, runs the command, disconnects, and then returns the log of the operation.
+     *
+     * @param command The FTPCommand to execute
+     * @return A String containing the logs of the FTP operation
+     */
+    public String executeCommandCaptureLogs(FTPCommand command) {
+        try {
+            client.connect();
+            command.execute(client);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            client.disconnect();
+        }
+        String response = client.getResponseBuffer();
+        System.out.println(response);
+        return response;
     }
 }
