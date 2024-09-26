@@ -211,8 +211,7 @@ public class FTPClient {
 
             output.flush();
             if (isDownload) {
-                String transferResponse = readResponse();
-                System.out.println(transferResponse);
+                readResponse();
             }
         }
     }

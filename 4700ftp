@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Script name: 4700ftp
+
+# Check if Java is installed
+if ! command -v java &> /dev/null
+then
+    echo "Java is not installed. Please install Java and try again."
+    exit 1
+fi
+
+# Path to the jar file
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+JAR_FILE="$SCRIPT_DIR/build/libs/Project_2.jar"
+
+# Check if the jar file exists
+if [ ! -f "$JAR_FILE" ]; then
+    echo "Error: $JAR_FILE not found."
+    exit 1
+fi
+
+# Function to print usage information
+print_usage() {
+    java -jar "$JAR_FILE" -h
+}
+
+# Check if any arguments were provided
+if [ $# -eq 0 ]; then
+    print_usage
+    exit 1
+fi
+
+# Run the Java application with all provided arguments
+java -jar "$JAR_FILE" "$@"
+
+# Check the exit status of the Java application
+exit_status=$?
+
+# Exit with the same status as the Java application
+exit $exit_status

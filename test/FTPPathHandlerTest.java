@@ -82,7 +82,6 @@ class FTPPathHandlerTest {
                 "ftp://user@name:password@example.com/file.txt", // Invalid character in username
         };
         for (String url : invalid_urls) {
-            System.out.println(url);
             assertThrows(MalformedURLException.class, () ->
                     FTPPathHandler.parse(url, "", true)
             );

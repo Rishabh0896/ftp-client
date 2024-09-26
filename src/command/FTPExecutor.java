@@ -56,8 +56,6 @@ public class FTPExecutor {
         } finally {
             client.disconnect();
         }
-        String response = client.getResponseBuffer();
-        System.out.println(response);
-        return response;
+        return client.getResponseBuffer();
     }
 }
