@@ -186,11 +186,6 @@ public class FTPClient {
         int dataPort = getDataPort();
         String command = isDownload ? "RETR " : "STOR ";
 
-        // Ensure local directory exists for download
-        if (isDownload) {
-            Files.createDirectories(Paths.get(localPath).getParent());
-        }
-
         try (Socket dataSocket = new Socket(server, dataPort);
              InputStream input = isDownload ? dataSocket.getInputStream() : new FileInputStream(localPath);
              OutputStream output = isDownload ? new FileOutputStream(localPath) : dataSocket.getOutputStream()) {
