@@ -43,6 +43,7 @@ public class FTPExecutor {
     /**
      * Executes an FTP command and captures the logs of the operation.
      * This method connects to the server, runs the command, disconnects, and then returns the log of the operation.
+     * This is majorly used for the record replay tests and is not used for any other interaction in the client code.
      *
      * @param command The FTPCommand to execute
      * @return A String containing the logs of the FTP operation

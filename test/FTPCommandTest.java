@@ -12,9 +12,21 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * FTPRecorder Class
+ * This class implements a mechanism for recording and replaying FTP command test cases.
+ * It allows for serialization and deserialization of test cases, enabling a record-replay
+ * testing strategy for FTP operations.
+ */
+
 class FTPRecorder implements Serializable {
     private Map<String, TestCase> testCases = new HashMap<>();
 
+    /**
+     * TestCase Inner Class
+     * Represents a single test case with the actual response, expected content,
+     * and a flag indicating whether the expected content should be present in the response.
+     */
     static class TestCase implements Serializable {
         String actualResponse;
         String expectedContent;
@@ -27,32 +39,69 @@ class FTPRecorder implements Serializable {
         }
     }
 
+    /**
+     * Records a new test case.
+     *
+     * @param testName The name of the test case
+     * @param actualResponse The actual response from the FTP server
+     * @param expectedContent The content expected in the response
+     * @param shouldContain Whether the expected content should be present in the response
+     */
     void recordTestCase(String testName, String actualResponse, String expectedContent, boolean shouldContain) {
         testCases.put(testName, new TestCase(actualResponse, expectedContent, shouldContain));
     }
 
+    /**
+     * Saves all recorded test cases to a file.
+     *
+     * @param filename The name of the file to save the test cases
+     * @throws IOException If an I/O error occurs
+     */
     void saveTestCases(String filename) throws IOException {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
             oos.writeObject(testCases);
         }
     }
 
+    /**
+     * Loads test cases from a file.
+     *
+     * @param filename The name of the file to load the test cases from
+     * @throws IOException If an I/O error occurs
+     * @throws ClassNotFoundException If the class of a serialized object cannot be found
+     */
     void loadTestCases(String filename) throws IOException, ClassNotFoundException {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
             testCases = (Map<String, TestCase>) ois.readObject();
         }
     }
 
+    /**
+     * Retrieves all recorded test cases.
+     *
+     * @return A Set of Map.Entry objects representing the test cases
+     */
     Set<Map.Entry<String, TestCase>> getTestCases() {
         return testCases.entrySet();
     }
 }
 
+/**
+ * FTPCommandTest Class
+ *
+ * This class implements a record-replay testing strategy for FTP commands.
+ * It uses the FTPRecorder to either record new test cases or replay previously recorded ones.
+ */
 public class FTPCommandTest {
     private static final FTPRecorder recorder = new FTPRecorder();
     private static final boolean isRecordMode = false;
     private static final String TEST_DATA_FILE = "ftp_test_cases.dat";
 
+    /**
+     * Sets up the test environment.
+     * If in record mode, it records new FTP responses.
+     * Otherwise, it loads previously recorded test cases.
+     */
     @BeforeAll
     static void setUp() throws IOException, ClassNotFoundException {
         if (isRecordMode) {
@@ -62,6 +111,11 @@ public class FTPCommandTest {
         }
     }
 
+    /**
+     * Records FTP responses for various test cases.
+     * This method is called when isRecordMode is true.
+     * It tests various FTP operations like ls, mkdir, cp, mv, rm, and rmdir.
+     */
     private static void recordFTPResponses() throws IOException {
         FTPExecutor executor = new FTPExecutor("ftp.4700.network", 21, "gupta.risha", "f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef");
         // Test Cases for ls command
@@ -105,6 +159,12 @@ public class FTPCommandTest {
         recorder.saveTestCases(TEST_DATA_FILE);
     }
 
+    /**
+     * Generates dynamic tests based on the recorded or loaded test cases.
+     * Each test case is converted into a DynamicTest.
+     *
+     * @return A Stream of DynamicTest objects
+     */
     @TestFactory
     Stream<DynamicTest> testFTPCommands() {
         return recorder.getTestCases().stream()
