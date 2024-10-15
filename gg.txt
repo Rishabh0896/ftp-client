@@ -1,9 +1,0 @@
-./4700ftp mv ftp://gupta.risha:f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef@ftp.4700.network:21/  /Users/rishggup/Documents/Coursework/CS5700_Networks/Project_2/gg.txt\n
-./4700ftp mv ftp://gupta.risha:f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef@ftp.4700.network:21/gg.txt  /Users/rishggup/Documents/Coursework/CS5700_Networks/Project_2/gg.txt\n
-./4700ftp mv /Users/rishggup/Documents/Coursework/CS5700_Networks/Project_2/gg.txt ftp://gupta.risha:f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef@ftp.4700.network:21/gg.txt\n
-./4700ftp mv ftp://gupta.risha:f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef@ftp.4700.network:21/gg.txt  /Users/rishggup/Documents/Coursework/CS5700_Networks/Project_2/gg.txt\n
-./4700ftp mv /Users/rishggup/Documents/Coursework/CS5700_Networks/Project_2/gg.txt ftp://gupta.risha:f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef@ftp.4700.network:21/gg.txt\n
-./4700ftp mv ftp://gupta.risha:f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef@ftp.4700.network:21/gg.txt  /Users/rishggup/Documents/Coursework/CS5700_Networks/Project_2/gg.txt\n
-
-
-./4700ftp ls ftp://gupta.risha:f60048066e1d153c5d1ecd1032a26369766ed8b32e1ef4b0466d553cbe8a77ef@ftp.4700.network:21/
